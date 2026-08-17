@@ -2,27 +2,21 @@ using UnityEngine;
 
 public class Coletavel : MonoBehaviour
 {
-    //quantidade de itens coletados ao iniciar
-    public int coletavel = 0;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void OnTriggerEnter(Collider other)
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        //mostra no console quantos coletou
-        Debug.Log(coletavel);
-    }
-    //utiliza de gatilhos para coletar item
-    void OnTriggerEnter(Collider outro)
-    {
-        if (outro.gameObject.CompareTag("item"))
+        // Verifica se o objeto que encostou tem a tag "snake" ou o componente Snake
+        if (other.CompareTag("snake"))
         {
-            coletavel++;
-            Destroy(outro.gameObject);
+            // Busca o script Snake na cabeça que colidiu
+            Snake cobra = other.GetComponent<Snake>();
+
+            if (cobra != null)
+            {
+                cobra.AumentaTamanho(); // Chama o método da cobrinha
+            }
+
+            // Destrói o item coletável atual
+            Destroy(gameObject);
         }
     }
 }
