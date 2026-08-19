@@ -42,7 +42,6 @@ public class Snake : MonoBehaviour
             transform.forward = mover; // Faz a cabeça virar para onde está andando
         }
 
-        // --- CHAMADAS CRUCIAIS ADICIONADAS AQUI ---
         TamanhoPlayer(); // Atualiza o histórico de posições
         MoveCorpo();     // Atualiza a posição dos segmentos do corpo
     }
