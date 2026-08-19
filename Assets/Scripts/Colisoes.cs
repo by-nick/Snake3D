@@ -13,11 +13,11 @@ public class Colisoes : MonoBehaviour
     {
         
     }
-    void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.CompareTag("paredes"))
+        if (other.gameObject.CompareTag("paredes"))
         {
-            Debug.Log("Perdeu");
+            Debug.Log("Perdeu, colidiu com a parede");
         }
     }
 }

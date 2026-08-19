@@ -3,21 +3,29 @@ using UnityEngine;
 
 public class Snake : MonoBehaviour
 {
-    // velocidade
-    [SerializeField] private float vel = 5f;
-    // tamanho inicial da cobrinha
-    [SerializeField] private int TamInicial = 5;
+    private Rigidbody RB;
 
-    [SerializeField] private GameObject Prefabs; // Lembre-se: use um Prefab SEM o script Snake!
-    // distancia entre os segmentos da cobrinha
+    [SerializeField] private float vel = 5f;
+    [SerializeField] private int TamInicial = 5;
+    [SerializeField] private GameObject Prefabs;
     [SerializeField] private float DistanciaDosSegmentos = 1.0f;
 
     private List<GameObject> corpo = new List<GameObject>();
     private List<Vector3> HistoricoPos = new List<Vector3>();
 
+    private Vector3 direcaoMover;
+
     void Start()
     {
-        // faz com que player comece com posição inicial
+        RB = GetComponent<Rigidbody>();
+
+        // Configurações essenciais do Rigidbody para não capotar nem voar
+        RB.constraints = RigidbodyConstraints.FreezePositionY |
+                         RigidbodyConstraints.FreezeRotationX |
+                         RigidbodyConstraints.FreezeRotationY |
+                         RigidbodyConstraints.FreezeRotationZ;
+        RB.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
         HistoricoPos.Add(transform.position);
 
         for (int i = 0; i < TamInicial; i++)
@@ -28,33 +36,38 @@ public class Snake : MonoBehaviour
 
     void Update()
     {
-        // Movimentação
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        // 1. Apenas lê as teclas no Update
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
 
-        Vector3 mover = new Vector3(h, 0, v);
-        
-        // Move no espaço global (Space.World) para evitar desalinhamento nos eixos
-        transform.Translate(mover * vel * Time.deltaTime, Space.World);
+        direcaoMover = new Vector3(h, 0, v).normalized;
 
-        if (mover != Vector3.zero)
+        if (direcaoMover != Vector3.zero)
         {
-            transform.forward = mover; // Faz a cabeça virar para onde está andando
+            transform.forward = direcaoMover;
         }
 
-        TamanhoPlayer(); // Atualiza o histórico de posições
-        MoveCorpo();     // Atualiza a posição dos segmentos do corpo
+        TamanhoPlayer();
+        MoveCorpo();
+    }
+
+    void FixedUpdate()
+    {
+        // 2. Movel a física com MovePosition dentro do FixedUpdate
+        if (direcaoMover != Vector3.zero)
+        {
+            Vector3 novaPosicao = RB.position + direcaoMover * vel * Time.fixedDeltaTime;
+            RB.MovePosition(novaPosicao);
+        }
     }
 
     private void TamanhoPlayer()
     {
-        // Adiciona a posição atual da cabeça ao início da lista
         if (HistoricoPos.Count == 0 || Vector3.Distance(HistoricoPos[0], transform.position) > 0.01f)
         {
             HistoricoPos.Insert(0, transform.position);
         }
 
-        // Limpa posições antigas que não são mais necessárias
         int limiteHistorico = (corpo.Count + 1) * 100;
         if (HistoricoPos.Count > limiteHistorico)
         {
@@ -71,8 +84,6 @@ public class Snake : MonoBehaviour
             distanciaAcumulada += DistanciaDosSegmentos;
 
             Vector3 posicaoAlvo = PosicaoNoHistorico(distanciaAcumulada);
-
-            // Trava a altura Y para ser exatamente igual à altura da cabeça
             posicaoAlvo.y = transform.position.y;
 
             corpo[i].transform.position = posicaoAlvo;
@@ -107,15 +118,11 @@ public class Snake : MonoBehaviour
             return;
         }
 
-        Vector3 posInicial = corpo.Count > 0 
-            ? corpo[corpo.Count - 1].transform.position 
+        Vector3 posInicial = corpo.Count > 0
+            ? corpo[corpo.Count - 1].transform.position
             : transform.position;
 
         GameObject novoSegmento = Instantiate(Prefabs, posInicial, Quaternion.identity);
         corpo.Add(novoSegmento);
     }
 }
-
-
-
-
